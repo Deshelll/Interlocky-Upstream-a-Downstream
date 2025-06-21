@@ -16,7 +16,6 @@ def create_controls(parent, canvas, alarm_text, alarm_rect, event_combobox_ref):
     ctk.CTkButton(frame, text="Vypnout Upstream", command=lambda: manual_disable_middle_upper(canvas)).pack(pady=5)
     ctk.CTkButton(frame, text="Vypnout Downstream", command=lambda: manual_disable_middle_lower(canvas)).pack(pady=5)
 
-    # === Выпадающий список событий ===
     ctk.CTkLabel(frame, text="Vyber událost:").pack(pady=(15, 5))
 
     event_options = [
@@ -31,10 +30,13 @@ def create_controls(parent, canvas, alarm_text, alarm_rect, event_combobox_ref):
     combobox.set("Vyber...")
     combobox.pack(pady=5)
 
-    # Привязка события
-    combobox.bind("<<ComboboxSelected>>", lambda e: on_event_selected(e, canvas, combobox, alarm_text, alarm_rect))
+    # Связываем выбор события через .configure
+    def handle_event_selection(choice):
+        on_event_selected(None, canvas, combobox, alarm_text, alarm_rect)
 
-    # Передаём наружу
+    combobox.configure(command=handle_event_selection)
+
+    # Передаём ссылку наружу
     event_combobox_ref[0] = combobox
 
     # Кнопка сброса тревоги

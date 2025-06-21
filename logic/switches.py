@@ -39,6 +39,10 @@ def set_switch_position(position, canvas):
     state.current_switch_state = position
 
 def set_lower_switch_position(position, canvas):
+    if not state.set_middle_lower_position_allowed and position == "on":
+        return
+    if position in ("on", "short") and state.current_lower_switch_state != "middle":
+        return
     if state.current_middle_lower_state == "on" and position in ("on", "short"):
         return
     if state.current_middle_lower_state == "on" and state.current_lower_switch_state in ("on", "short") and position == "middle":
@@ -95,6 +99,8 @@ def set_middle_upper_position(position, canvas):
 
 def set_middle_lower_position(position, canvas):
     if not state.set_middle_lower_position_allowed and position == "on":
+        return
+    if position == "on" and state.current_middle_upper_state != "on":
         return
     if state.voltage_state == 1 and position == "on" and state.current_lower_switch_state == "on":
         return
