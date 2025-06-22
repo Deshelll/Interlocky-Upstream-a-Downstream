@@ -1,5 +1,7 @@
 import customtkinter as ctk
 from logic import switches
+import customtkinter as ctk
+from logic import custom_switches
 from logic.events import (
     reset_trip,
     on_event_selected,
@@ -45,5 +47,29 @@ def create_controls(parent, canvas, alarm_text, alarm_rect, event_combobox_ref):
         text="Reset Lockout",
         command=lambda: reset_trip(canvas, combobox, alarm_text, alarm_rect)
     ).pack(pady=(15, 10))
+
+    return frame
+    
+    
+def create_task2_controls(parent, canvas):
+
+    frame = ctk.CTkFrame(parent, width=200)  # ширина такая же, как у task1
+    frame.pack_propagate(False)  # чтобы не сжимался
+    frame.pack(fill="y", padx=10, pady=10)
+
+    ctk.CTkLabel(frame, text="Ruční vypnutí", font=("Segoe UI", 14)).pack(pady=(10, 10))
+
+    buttons = [
+        ("Vypnout vypínač OUT 1", "cabinet1"),
+        ("Vypnout vypínač INC", "cabinet2"),
+        ("Vypnout vypínač BC", "cabinet3"),
+        ("Vypnout vypínač INC 2", "cabinet4"),
+        ("Vypnout vypínač OUT 2", "cabinet5"),
+    ]
+
+    for label, group_id in buttons:
+        ctk.CTkButton(frame, text=label, width=180, height=28,
+                      command=lambda g=group_id: custom_switches.force_turn_off_two_switches_by_group(g))\
+            .pack(pady=5, padx=10)
 
     return frame

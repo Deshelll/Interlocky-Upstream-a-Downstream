@@ -64,7 +64,32 @@ def on_event_selected(event, canvas, event_combobox, alarm_text, alarm_rect):
     canvas.itemconfig(alarm_rect, fill=fill_color)
 
 def manual_disable_middle_upper(canvas):
-    switches.set_middle_upper_position("off", canvas)
+    # Принудительное выключение, без проверок
+    state.current_middle_upper_state = "off"
+    for el in state.middle_upper_parts:
+        canvas.delete(el)
+    state.middle_upper_parts.clear()
+
+    offset_x = 150
+    offset_y = 50
+    coords = (180 + offset_x, 130 + offset_y, 200 + offset_x, 155 + offset_y)
+    line = canvas.create_line(*coords, width=2)
+    state.middle_upper_parts.append(line)
+    canvas.tag_bind(line, "<Button-1>", lambda e: switches.on_middle_upper_click(e, canvas))
+
+    # И одновременно отключаем нижний
+    manual_disable_middle_lower(canvas)
 
 def manual_disable_middle_lower(canvas):
-    switches.set_middle_lower_position("off", canvas)
+    # Принудительное выключение, без проверок
+    state.current_middle_lower_state = "off"
+    for el in state.middle_lower_parts:
+        canvas.delete(el)
+    state.middle_lower_parts.clear()
+
+    offset_x = 150
+    offset_y = 50
+    coords = (180 + offset_x, 286 + offset_y, 200 + offset_x, 261 + offset_y)
+    line = canvas.create_line(*coords, width=2)
+    state.middle_lower_parts.append(line)
+    canvas.tag_bind(line, "<Button-1>", lambda e: switches.on_middle_lower_click(e, canvas))

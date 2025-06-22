@@ -2,7 +2,9 @@ import customtkinter as ctk
 import tkinter as tk
 from ui.sidebar_ctk import create_sidebar
 from ui.controls_ctk import create_controls
+from ui.controls_ctk import create_task2_controls
 from ui.schematic import draw_schematic
+from ui.schematic import draw_schematic_task2
 from logic import state
 
 ctk.set_appearance_mode("Dark")
@@ -23,7 +25,7 @@ controls_frame = None
 
 def show_task1():
     global controls_frame
-
+    app.geometry("1200x700")
     canvas_frame.pack(side="left", expand=True, fill="both", padx=10, pady=10)
     canvas.delete("all")
     draw_schematic(canvas)
@@ -39,9 +41,15 @@ def show_task1():
 
 def show_task2():
     global controls_frame
-    canvas_frame.pack_forget()
+    app.geometry("1350x700")
+    canvas_frame.pack(side="left", expand=True, fill="both", padx=10, pady=10)
+    canvas.delete("all")
+    draw_schematic_task2(canvas)
+
     if controls_frame:
         controls_frame.pack_forget()
+    controls_frame = create_task2_controls(app, canvas)
+    controls_frame.pack(side="right", fill="y", padx=10, pady=10)
 
 sidebar = create_sidebar(app, show_task1, show_task2)
 sidebar.pack(side="left", fill="y", padx=10, pady=10)
