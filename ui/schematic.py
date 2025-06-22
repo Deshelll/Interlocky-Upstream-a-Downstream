@@ -1,4 +1,4 @@
-from canvas_elements import Line, Circle, GroundSymbol
+from canvas_elements import Line, Circle, GroundSymbol, Arrow
 from logic import state, switches
 from logic import custom_switches
 
@@ -125,7 +125,7 @@ def draw_custom_branch_shaft_2(canvas, dx, dy):
     Line(canvas, base_x, 105 + dy, base_x, 130 + dy)
 
     # Вертикаль вниз от нижнего
-    Line(canvas, base_x, 155 + dy, base_x, 180 + dy + vertical_extension)
+    Arrow(canvas, base_x, 155 + dy, base_x, 180 + dy + vertical_extension, direction="up")
 
     # === Переключатели ===
 
@@ -197,7 +197,7 @@ def draw_custom_branch_4(canvas, dx, dy):
     Line(canvas, base_x, 105 + dy, base_x, 130 + dy)
 
     # Линия от нижнего вниз
-    Line(canvas, base_x, 155 + dy, base_x, 180 + dy + vertical_extension)
+    Arrow(canvas, base_x, 155 + dy, base_x, 180 + dy + vertical_extension, direction="up")
 
     # Переключатели
     custom_switches.register_three_switch(canvas, x=base_x, y=105 + dy, group_id="cabinet4")
@@ -219,7 +219,7 @@ def draw_custom_branch_5(canvas, dx, dy):
 
     # Соединение верхний → нижний → вниз
     Line(canvas, base_x, 105 + dy, base_x, 130 + dy)
-    Line(canvas, base_x, 155 + dy, base_x, 180 + dy + vertical_extension)
+    Arrow(canvas, base_x, 155 + dy, base_x, 180 + dy + vertical_extension, direction="down")
 
     # Переключатели
     custom_switches.register_three_switch(canvas, x=base_x, y=105 + dy, group_id="cabinet5")
@@ -243,4 +243,4 @@ def draw_branch_frame(canvas, dx, dy):
     GroundSymbol(canvas, ground_x, 115 + dy)
 
     # Общая вертикаль вниз
-    Line(canvas, base_x, 180 + dy, base_x, 180 + dy + 20 * 4)
+    Arrow(canvas, base_x, 180 + dy, base_x, 180 + dy + 20 * 4, direction="down")
