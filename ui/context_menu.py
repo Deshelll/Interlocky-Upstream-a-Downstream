@@ -36,7 +36,7 @@ class CustomContextMenu:
                 circle_color=color,
                 text_color=t_color,
                 tooltip_text=tooltip_text or (
-                    "Нельзя выбрать этот пункт, т.к. вы уже находитесь в нём" if highlight else "Действие сейчас недоступно"
+                    "Jste již v této poloze" if highlight else "Jste již v této poloze"
                 )
             )
             icon.pack(side="right", padx=5)

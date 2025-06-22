@@ -54,14 +54,23 @@ def register_two_switch(canvas, x, y, group_id=None):
 def show_three_switch_menu(event, switch):
     menu = CustomContextMenu(switch["canvas"])
     current = switch["position"]
+    group = switch.get("group_id")
 
-    # Проверка: есть ли включённый двухпозиционный в этом же шкафу (по group_id)
-    block_due_to_local_two = any(
-        sw["type"] == "two"
-        and sw["position"] == "on"
-        and sw.get("group_id") == switch.get("group_id")
-        for sw in custom_switches
-    )
+    if group in ("cabinet3_left", "cabinet3_right"):
+        block_due_to_local_two = any(
+            sw["type"] == "two"
+            and sw["position"] == "on"
+            and sw.get("group_id") in ("cabinet3_left", "cabinet3_right")
+            for sw in custom_switches
+        )
+    else:
+        block_due_to_local_two = any(
+            sw["type"] == "two"
+            and sw["position"] == "on"
+            and sw.get("group_id") == group
+            for sw in custom_switches
+        )
+
 
     options = [
         ("on", "Zajet Disconnectorem"),
@@ -73,68 +82,87 @@ def show_three_switch_menu(event, switch):
         disabled = False
         tooltip = None
         highlight = (current == value)
-        # 🔒 Блок: если в cabinet3 есть short, нельзя отключить текущий ON
-        if switch.get("group_id") == "cabinet3" and current == "on" and value in ("middle", "short"):
+
+        # 🔒 1. Первая и главная проверка – двухпозиционный включён
+        if block_due_to_local_two:
+            disabled = True
+            tooltip = "Nelze operovat – vypínač ve stejném panelu je zapnutý"
+
+        # ✅ Остальные проверки – только если не заблокировано выше
+        if not disabled:
+            if value == "on":
+                conflict = is_group_conflict(switch, value)
+                if conflict:
+                    disabled = True
+                    tooltip = conflict
+
+            if (current == "on" and value == "short") or (current == "short" and value == "on"):
+                disabled = True
+                tooltip = "Přímý přechod mezi ON a Zazkratovat je zakázán – použijte mezipolohu"
+
+        # 🔒 Если двухпозиционный включён
+
+        # 🔒 Нельзя отключить ON, если другой в группе в short
+        if group in ("cabinet3_left", "cabinet3_right") and current == "on" and value in ("middle", "short"):
             if any(
                 sw["type"] == "three"
                 and sw is not switch
-                and sw.get("group_id") == "cabinet3"
+                and sw.get("group_id") in ("cabinet3_left", "cabinet3_right")
                 and sw["position"] == "short"
                 for sw in custom_switches
             ):
                 disabled = True
-                tooltip = "Нельзя отключить: другой выключатель заскратован"
-        # Блокируем прямой переход on <-> short
-        if (current == "on" and value == "short") or (current == "short" and value == "on"):
-            disabled = True
-            tooltip = "Переход напрямую из 'вкл.' в 'заземление' запрещён — только через 'mezipoloha'"
+                tooltip = "Nelze vypnout – druhý třípolohový spínač je zkratován"
 
-        # Блокируем всё, если двухпозиционный в этом шкафу включён
-        elif block_due_to_local_two:
-            disabled = True
-            tooltip = "Нельзя переключать: двухпозиционный в этом шкафу включён"
-        elif value == "on":
-            # 🔒 Запрет: если в cabinet3 уже есть 'short', нельзя включать "on" в других шкафах
-            if switch.get("group_id") != "cabinet3":
-                if any(
-                    sw["type"] == "three"
-                    and sw.get("group_id") == "cabinet3"
-                    and sw["position"] == "short"
-                    for sw in custom_switches
-                ):
+        # 🔒 Проверка при включении (on), если сработал zkratovač с другой стороны
+        if value == "on":
+            if group in ("cabinet4", "cabinet5"):
+                if any(sw["group_id"] == "cabinet3_left" and sw["position"] == "short" for sw in custom_switches):
                     disabled = True
-                    tooltip = "Нельзя включить: в большом шкафу уже есть 'заскратовано'"
-        elif value == "short":
-            group = switch.get("group_id")
+                    tooltip = "Nelze zapnout: levý zkratovač BC je aktivní"
+            elif group in ("cabinet1", "cabinet2"):
+                if any(sw["group_id"] == "cabinet3_right" and sw["position"] == "short" for sw in custom_switches):
+                    disabled = True
+                    tooltip = "Nelze zapnout: pravý zkratovač BC je aktivní"
 
-            other_in_group = [
+        # 🔒 Обработка "Zazkratovat"
+        if value == "short":
+            # Найти связанную группу
+            if group == "cabinet3_left":
+                other_group = "cabinet3_right"
+                excluded = {"cabinet4", "cabinet5"}
+            elif group == "cabinet3_right":
+                other_group = "cabinet3_left"
+                excluded = {"cabinet1", "cabinet2"}
+            else:
+                other_group = group
+                excluded = set()
+
+            # Второй в паре
+            other = [
                 sw for sw in custom_switches
                 if sw["type"] == "three"
                 and sw is not switch
-                and sw.get("group_id") == group
+                and sw.get("group_id") == other_group
             ]
 
-            # 🔐 Условие 1 — в группе уже есть short
-            if any(sw["position"] == "short" for sw in other_in_group):
+            if any(sw["position"] == "short" for sw in other):
                 disabled = True
-                tooltip = "В группе уже один выключатель в 'заскратовать'"
+                tooltip = "Nelze zazkratovat: v tomto poli je již zkratováno"
 
-            # 🔐 Только для cabinet3: второй должен быть включён + остальные выключены
-            elif group == "cabinet3":
-                # 2. Второй в группе не включён
-                if not any(sw["position"] == "on" for sw in other_in_group):
-                    disabled = True
-                    tooltip = "Заскратовать можно только если второй выключатель включён (ON)"
+            elif not any(sw["position"] == "on" for sw in other):
+                disabled = True
+                tooltip = "Zkratovat lze pouze pokud druhý spínač je ve stavu ON"
 
-                # 3. В других шкафах есть включённые
-                elif any(
-                    sw["type"] == "three"
-                    and sw.get("group_id") != "cabinet3"
-                    and sw["position"] == "on"
-                    for sw in custom_switches
-                ):
-                    disabled = True
-                    tooltip = "Заскратовать нельзя: в другом шкафу выключатель уже включён"
+            elif any(
+                sw["type"] == "three"
+                and sw.get("group_id") in excluded
+                and sw["position"] == "on"
+                for sw in custom_switches
+            ):
+                disabled = True
+                tooltip = "Zkratovat nelze, pokud v druhém rozvaděči je odpojovač zapnutý."
+
         menu.add_option(
             label,
             command=lambda v=value: set_three_switch_position(switch, v),
@@ -145,6 +173,8 @@ def show_three_switch_menu(event, switch):
 
     menu.show(event.x_root, event.y_root)
     menu.close_on_click_outside()
+
+
 
 
 # === МЕНЮ ДЛЯ ДВУХПОЗИЦИОННОГО ===
@@ -159,23 +189,27 @@ def show_two_switch_menu(event, switch):
         is_current = (switch["position"] == value)
         disabled = False
         tooltip = None
-
+        if value == "on":
+            conflict = is_group_conflict(switch, value)
+            if conflict:
+                disabled = True
+                tooltip = "Nelze zapnout, pokud je zapnutý druhý Incomer"
         # 🔒 Обрабатываем запрет выключения (off)
         if value == "off" and switch["position"] == "on":
             group = switch.get("group_id")
 
-            if group == "cabinet3":
+            if group in ("cabinet3_left", "cabinet3_right"):
                 # Все трехпозиционные из cabinet3
                 three_switches = [
                     sw for sw in custom_switches
-                    if sw["type"] == "three" and sw.get("group_id") == "cabinet3"
+                    if sw["type"] == "three" and sw.get("group_id") in ("cabinet3_left", "cabinet3_right")
                 ]
                 one_in_short = any(sw["position"] == "short" for sw in three_switches)
                 one_in_on = any(sw["position"] == "on" for sw in three_switches)
 
                 if one_in_short and one_in_on:
                     disabled = True
-                    tooltip = "Нельзя выключить: другой выключатель заскратован и один включён"
+                    tooltip = "Vypnutí je možné pouze pomocí manuálního tlačítka, pokud jste ve stavu „Zazkratováno“."
             else:
                 # В других шкафах: если трёхпозиционный в short
                 three_in_short = any(
@@ -186,7 +220,7 @@ def show_two_switch_menu(event, switch):
                 )
                 if three_in_short:
                     disabled = True
-                    tooltip = "Нельзя выключить: заскратовано — отключите вручную"
+                    tooltip = "Vypnutí je možné pouze pomocí manuálního tlačítka, pokud jste ve stavu „Zazkratováno“."
 
         menu.add_option(
             label,
@@ -249,9 +283,26 @@ def set_two_switch_position(switch, pos):
 
     switch["id"] = line
     switch["position"] = pos
+# Обновляем custom_switches, если объект заменился
+
 
 
 def force_turn_off_two_switches_by_group(group_id):
     for sw in custom_switches:
         if sw["type"] == "two" and sw.get("group_id") == group_id:
             set_two_switch_position(sw, "off")
+            
+def is_group_conflict(switch, new_pos):
+    if new_pos != "on":
+        return False
+
+    group = switch.get("group_id")
+    if group not in ("cabinet2", "cabinet4"):
+        return False
+
+    other = "cabinet4" if group == "cabinet2" else "cabinet2"
+
+    for sw in custom_switches:
+        if sw.get("group_id") == other and sw["position"] == "on":
+            return f"Nelze zapnout: { 'druhý' if other == 'cabinet4' else 'první' } Incomer je již aktivní"
+    return False

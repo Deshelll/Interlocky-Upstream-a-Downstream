@@ -12,7 +12,7 @@ from logic.events import (
 def create_controls(parent, canvas, alarm_text, alarm_rect, event_combobox_ref):
     frame = ctk.CTkFrame(parent)
 
-    ctk.CTkLabel(frame, text="Управление", font=("Segoe UI", 16)).pack(pady=10)
+    ctk.CTkLabel(frame, text="Ovládání", font=("Segoe UI", 16)).pack(pady=10)
 
     ctk.CTkButton(frame, text="Změnit napětí", command=lambda: switches.toggle_voltage(canvas)).pack(pady=5)
     ctk.CTkButton(frame, text="Vypnout Upstream", command=lambda: manual_disable_middle_upper(canvas)).pack(pady=5)
@@ -57,12 +57,12 @@ def create_task2_controls(parent, canvas):
     frame.pack_propagate(False)  # чтобы не сжимался
     frame.pack(fill="y", padx=10, pady=10)
 
-    ctk.CTkLabel(frame, text="Ruční vypnutí", font=("Segoe UI", 14)).pack(pady=(10, 10))
+    ctk.CTkLabel(frame, text="Ovládání", font=("Segoe UI", 14)).pack(pady=(10, 10))
 
     buttons = [
         ("Vypnout vypínač OUT 1", "cabinet1"),
         ("Vypnout vypínač INC", "cabinet2"),
-        ("Vypnout vypínač BC", "cabinet3"),
+        ("Vypnout vypínač BC", "cabinet3_left"),
         ("Vypnout vypínač INC 2", "cabinet4"),
         ("Vypnout vypínač OUT 2", "cabinet5"),
     ]

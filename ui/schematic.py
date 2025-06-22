@@ -156,8 +156,8 @@ def draw_custom_branch_3_left(canvas, dx, dy):
     Line(canvas, base_x, 155 + dy, base_x, 180 + dy + vertical_extension)
 
     # Переключатели
-    custom_switches.register_three_switch(canvas, x=base_x, y=105 + dy, group_id="cabinet3")
-    custom_switches.register_two_switch(canvas, x=base_x, y=155 + dy, group_id="cabinet3")
+    custom_switches.register_three_switch(canvas, x=base_x, y=105 + dy, group_id="cabinet3_left")
+    custom_switches.register_two_switch(canvas, x=base_x, y=155 + dy, group_id="cabinet3_left")
 
 def draw_custom_branch_3_right(canvas, dx, dy):
     base_x = 200 + dx
@@ -177,7 +177,7 @@ def draw_custom_branch_3_right(canvas, dx, dy):
     Line(canvas, base_x, 105 + dy, base_x, 180 + dy + vertical_extension)
 
     # Переключатель
-    custom_switches.register_three_switch(canvas, x=base_x, y=105 + dy, group_id="cabinet3")
+    custom_switches.register_three_switch(canvas, x=base_x, y=105 + dy, group_id="cabinet3_right")
 
 def draw_custom_branch_4(canvas, dx, dy):
     base_x = 200 + dx
