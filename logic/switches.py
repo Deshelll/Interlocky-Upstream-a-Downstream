@@ -5,14 +5,14 @@ from ui.context_menu import CustomContextMenu
 from canvas_elements import Line, GroundSymbol
 from logic import state, switches
 
-# ====== Проверки допустимости переходов ======
+
 
 def is_switch_transition_allowed(position):
-# Запрещаем short, если нижний в on
+
     if position == "short" and state.current_lower_switch_state == "on":
         return ("lower_on_block", "Nelze zazkratovat, pokud je disconnector Downstream připojen k přípojnici")
 
-    # Запрещаем on, если нижний в short
+
     if position == "on" and state.current_lower_switch_state == "short":
         return ("lower_short_block", "Nelze zapnout: Downstream zkratovač je zkratován")
     if state.current_switch_state == position:
@@ -28,11 +28,11 @@ def is_switch_transition_allowed(position):
     return True
 
 def is_lower_switch_transition_allowed(position):
-# Запрещаем short, если верхний в on
+
     if position == "short" and state.current_switch_state == "on":
         return ("upper_on_block", "Nelze zazkratovat, pokud je disconnector Upstream připojen k přípojnici")
 
-    # Запрещаем on, если верхний в short
+
     if position == "on" and state.current_switch_state == "short":
         return ("upper_short_block", "Nelze zapnout: Upstream zkratovač je zkratován")
     if state.current_lower_switch_state == position:
@@ -70,12 +70,12 @@ def is_middle_upper_transition_allowed(position):
     return True
 
 def is_middle_lower_transition_allowed(position):
-    # ❗ запрет выключения при short и активном нижнем ключе
+
     if position == "off" and state.current_middle_lower_state == "on":
         if state.current_lower_switch_state == "short":
             return ("short_block", "Pro odzkratování použijte manuální tlačítko")
 
-    # ✅ return "current" — только если нет запрета выше
+
     if state.current_middle_lower_state == position:
         return "current"
 
@@ -88,7 +88,7 @@ def is_middle_lower_transition_allowed(position):
 
     return True
 
-# ====== Смена состояния ======
+
 
 def toggle_voltage(canvas):
     state.voltage_state = 1 - state.voltage_state
@@ -154,7 +154,7 @@ def set_middle_upper_position(position, canvas):
     state.current_middle_upper_state = position
 
     if position == "off":
-        # 🔧 Принудительное выключение нижнего среднего ключа
+
         state.current_middle_lower_state = "off"
         for el in state.middle_lower_parts:
             canvas.delete(el)
@@ -183,7 +183,7 @@ def set_middle_lower_position(position, canvas):
     canvas.tag_bind(line, "<Button-1>", lambda e: on_middle_lower_click(e, canvas))
     state.current_middle_lower_state = position
 
-# ====== Контекстные меню ======
+
 
 def on_switch_click(event, canvas):
     menu = CustomContextMenu(canvas)

@@ -64,7 +64,7 @@ def on_event_selected(event, canvas, event_combobox, alarm_text, alarm_rect):
     canvas.itemconfig(alarm_rect, fill=fill_color)
 
 def manual_disable_middle_upper(canvas):
-    # Принудительное выключение, без проверок
+
     state.current_middle_upper_state = "off"
     for el in state.middle_upper_parts:
         canvas.delete(el)
@@ -77,11 +77,11 @@ def manual_disable_middle_upper(canvas):
     state.middle_upper_parts.append(line)
     canvas.tag_bind(line, "<Button-1>", lambda e: switches.on_middle_upper_click(e, canvas))
 
-    # И одновременно отключаем нижний
+
     manual_disable_middle_lower(canvas)
 
 def manual_disable_middle_lower(canvas):
-    # Принудительное выключение, без проверок
+
     state.current_middle_lower_state = "off"
     for el in state.middle_lower_parts:
         canvas.delete(el)

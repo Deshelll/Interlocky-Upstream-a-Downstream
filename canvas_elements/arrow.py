@@ -2,7 +2,7 @@ import math
 from .line import Line
 
 class Arrow(Line):
-    # Можно подстроить эти значения здесь
+
     offset_x = -0.4
     offset_y = 0
 
@@ -15,8 +15,8 @@ class Arrow(Line):
             self.arrowhead = self._draw_arrowhead(x2 + self.offset_x, y2 + self.offset_y - 20, upward=False)
 
     def _draw_arrowhead(self, x, y, upward=True):
-        angle = math.radians(20)     # угол между стрелкой и вертикалью
-        length = 20                  # длина стрелки
+        angle = math.radians(20)
+        length = 20
 
         dx = length * math.sin(angle)
         dy = length * math.cos(angle)
