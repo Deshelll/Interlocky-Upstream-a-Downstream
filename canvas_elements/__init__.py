@@ -7,4 +7,3 @@ from .arrow import Arrow
 from .TripleCircle import TripleCircle
 from .synchrocheck import synchrocheck
 __all__ = ["Line", "Circle", "Coil", "GroundSymbol", "SwitchSymbol", "Arrow", "TripleCircle"]
-

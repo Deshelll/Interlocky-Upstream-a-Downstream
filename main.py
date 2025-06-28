@@ -24,6 +24,7 @@ ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
 
 app = ctk.CTk()
+app.iconbitmap(default=resource_path("assets/abb.ico"))
 app.geometry("1200x700")
 app.title("Interlocky Upstream a Downstream")
 

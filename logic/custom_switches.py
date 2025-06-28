@@ -314,6 +314,35 @@ def show_two_switch_menu(event, switch):
                 )
 
                 if other_three_on and other_two_on and left_three_on and right_three_on and two_on_bc and local_three_on:
+                    if hasattr(state, "synchro_ui") and state.synchro_ui.visible:
+                        mode = state.synchro_ui.mode_dropdown.get()
+                        try:
+                            u_left = float(state.synchro_ui.left_entries[0].get())
+                            u_right = float(state.synchro_ui.right_entries[0].get())
+                            f_left = float(state.synchro_ui.left_entries[1].get())
+                            f_right = float(state.synchro_ui.right_entries[1].get())
+                            a_left = float(state.synchro_ui.left_entries[2].get())
+                            a_right = float(state.synchro_ui.right_entries[2].get())
+                        except ValueError:
+                            valid_sync = False
+                        else:
+                            match mode:
+                                case "DeadLine DeadBus":
+                                    valid_sync = u_left == 0 and u_right == 0
+                                case "LiveLine DeadBus":
+                                    valid_sync = u_left != 0 and u_right == 0
+                                case "DeadLine LiveBus":
+                                    valid_sync = u_left == 0 and u_right != 0
+                                case "LiveLine LiveBus":
+                                    valid_sync = (
+                                        u_left == u_right and f_left == f_right and a_left == a_right and u_left != 0
+                                    )
+                                case _:
+                                    valid_sync = False
+
+                        if valid_sync:
+                            disabled = False
+                            tooltip = None
                     disabled = True
                     tooltip = "Nelze zapnout: oba Incomery by byly aktivní a rozvaděč BC je již celý zapnutý"
 
@@ -338,8 +367,35 @@ def show_two_switch_menu(event, switch):
                 )
 
                 if inc1_three_on and inc1_two_on and inc2_three_on and inc2_two_on:
-                    disabled = True
-                    tooltip = "Nelze zapnout: oba Incomery jsou plně zapnuté – nelze propojit rozvaděče"
+                    valid_sync = False
+                    if hasattr(state, "synchro_ui") and state.synchro_ui.visible:
+                        try:
+                            u_left = float(state.synchro_ui.left_entries[0].get())
+                            f_left = float(state.synchro_ui.left_entries[1].get())
+                            a_left = float(state.synchro_ui.left_entries[2].get())
+                            u_right = float(state.synchro_ui.right_entries[0].get())
+                            f_right = float(state.synchro_ui.right_entries[1].get())
+                            a_right = float(state.synchro_ui.right_entries[2].get())
+                            mode = state.synchro_ui.mode_dropdown.get()
+
+                            match mode:
+                                case "DeadLine DeadBus":
+                                    valid_sync = u_left == 0 and u_right == 0
+                                case "LiveLine DeadBus":
+                                    valid_sync = u_left != 0 and u_right == 0
+                                case "DeadLine LiveBus":
+                                    valid_sync = u_left == 0 and u_right != 0
+                                case "LiveLine LiveBus":
+                                    valid_sync = (
+                                        u_left == u_right and f_left == f_right and a_left == a_right and u_left != 0
+                                    )
+                        except:
+                            valid_sync = False
+
+                    if not valid_sync:
+                        disabled = True
+                        tooltip = "Nelze zapnout: oba Incomery jsou plně zapnuté – nelze propojit rozvaděče"
+
 
 
         menu.add_option(
