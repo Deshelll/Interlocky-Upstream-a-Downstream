@@ -187,14 +187,19 @@ class SynchroUI:
 
         voltage_present = u_left > 0 or u_right > 0
 
-        if voltage_present and (left_short or right_short):
-            print("Отладка: u_left =", u_left, "u_right =", u_right)
-            print("Отладка: bc_left_short =", state.bc_left_short, "bc_right_short =", state.bc_right_short)
+        # === Автоматическое отключение общего двухпозиционного BC
+        if voltage_present:
+            sw_bc = next(
+                (s for s in custom_switches
+                if s["type"] == "two"
+                and s.get("group_id") in ("cabinet3_left", "cabinet3_right")
+                and s["position"] == "on"),
+                None
+            )
 
-            for sw in custom_switches:
-                if sw["type"] == "two" and sw.get("group_id") in ("cabinet3_left", "cabinet3_right"):
-                    if sw["position"] == "on":
-                        print("➡️ Авто-включение BC:", sw["group_id"],
-                            "| Напряжения:", u_left, u_right,
-                            "| short:", left_short, right_short)
-                        set_two_switch_position(sw, "off")
+            if sw_bc:
+                if left_on and right_short and u_left > 0:
+                    set_two_switch_position(sw_bc, "off")
+                elif right_on and left_short and u_right > 0:
+                    set_two_switch_position(sw_bc, "off")
+
