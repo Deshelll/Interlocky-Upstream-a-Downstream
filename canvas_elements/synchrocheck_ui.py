@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from logic import state
 from logic import custom_switches
-from logic.custom_switches import custom_switches
+from logic.custom_switches import custom_switches, set_two_switch_position
 
 class SynchroUI:
     def __init__(self, parent):
@@ -50,6 +50,8 @@ class SynchroUI:
         entry = ctk.CTkEntry(row, width=100)
         entry.insert(0, default_value)
         entry.bind("<KeyRelease>", lambda e: self.update_line_colors())
+        entry.bind("<FocusOut>", lambda e: self.update_line_colors())
+        entry.bind("<Return>", lambda e: self.update_line_colors())
 
 
         label.pack(side="left", padx=(0, 5))
@@ -133,21 +135,66 @@ class SynchroUI:
             sw["type"] == "three" and sw.get("group_id") == "cabinet3_right" and sw["position"] == "on"
             for sw in custom_switches
         )
-
+        bc_two_on = any(
+            sw["type"] == "two" and sw.get("group_id") in ("cabinet3_left", "cabinet3_right") and sw["position"] == "on"
+            for sw in custom_switches
+        )
         # === линии внутри BC
-        if state.synchro_bc_left:
-            val = color(u_right, valid) if right_on else "black"
-            state.canvas.itemconfig(state.synchro_bc_left, fill=val, width=3 if val != "black" else 1)
 
+# === synchro_bc_middle (отображает правую сторону, если она активна)
         if state.synchro_bc_middle:
-            val = color(u_left, valid) if left_on else "black"
+            if left_on:
+                val = color(u_left, valid)
+            elif right_on and bc_two_on:
+                val = color(u_right, valid)
+            else:
+                val = "black"
             state.canvas.itemconfig(state.synchro_bc_middle, fill=val, width=3 if val != "black" else 1)
 
+        # === synchro_bc_left
+        if state.synchro_bc_left:
+            if right_on:
+                val = color(u_right, valid)
+            elif left_on and bc_two_on:
+                val = color(u_left, valid)
+            else:
+                val = "black"
+            state.canvas.itemconfig(state.synchro_bc_left, fill=val, width=3 if val != "black" else 1)
+
+        # === synchro_bc_right — только при right_on
         if state.synchro_bc_right:
-            val = color(u_right, valid) if right_on else "black"
+            if right_on:
+                val = color(u_right, valid)
+            elif left_on and bc_two_on:
+                val = color(u_left, valid)
+            else:
+                val = "black"
             state.canvas.itemconfig(state.synchro_bc_right, fill=val, width=3 if val != "black" else 1)
 
+        # === synchro_bridge
         if state.synchro_bridge:
-            val = color(u_right, valid) if right_on else "black"
+            if right_on:
+                val = color(u_right, valid)
+            elif left_on and bc_two_on:
+                val = color(u_left, valid)
+            else:
+                val = "black"
             state.canvas.itemconfig(state.synchro_bridge, fill=val, width=3 if val != "black" else 1)
+                        # === Если хотя бы одна сторона заскратована, и есть напряжение, то открыть двухпозиционный BC
+        left_short = state.bc_left_short
+        right_short = state.bc_right_short
 
+
+        voltage_present = u_left > 0 or u_right > 0
+
+        if voltage_present and (left_short or right_short):
+            print("Отладка: u_left =", u_left, "u_right =", u_right)
+            print("Отладка: bc_left_short =", state.bc_left_short, "bc_right_short =", state.bc_right_short)
+
+            for sw in custom_switches:
+                if sw["type"] == "two" and sw.get("group_id") in ("cabinet3_left", "cabinet3_right"):
+                    if sw["position"] == "on":
+                        print("➡️ Авто-включение BC:", sw["group_id"],
+                            "| Напряжения:", u_left, u_right,
+                            "| short:", left_short, right_short)
+                        set_two_switch_position(sw, "off")

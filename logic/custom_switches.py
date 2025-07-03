@@ -3,6 +3,19 @@ from logic import state
 
 custom_switches = []
 
+def get_synchro_voltage(side):
+    if not hasattr(state, "synchro_ui") or not state.synchro_ui.visible:
+        return 0.0
+
+    try:
+        if side == "left":
+            return float(state.synchro_ui.left_entries[0].get())
+        elif side == "right":
+            return float(state.synchro_ui.right_entries[0].get())
+    except ValueError:
+        return 0.0
+
+    return 0.0
 
 def register_three_switch(canvas, x, y, group_id=None):
     switch = {
@@ -151,7 +164,17 @@ def show_three_switch_menu(event, switch):
                 elif not any(sw["position"] == "on" for sw in other):
                     disabled = True
                     tooltip = "Zkratovat lze pouze pokud druhý spínač je ve stavu ON"
+            if group == "cabinet3_left":
+                u_right = get_synchro_voltage("right")
+                if u_right > 0:
+                    disabled = True
+                    tooltip = "Nelze zazkratovat: na pravém sběrnici je napětí"
 
+            elif group == "cabinet3_right":
+                u_left = get_synchro_voltage("left")
+                if u_left > 0:
+                    disabled = True
+                    tooltip = "Nelze zazkratovat: na levém sběrnici je napětí"
 
             if not disabled:
                 if any(
@@ -416,7 +439,16 @@ def set_three_switch_position(switch, pos):
     canvas = switch["canvas"]
     x, y = switch["x"], switch["y"]
     current = switch["position"]
-
+    if pos == "short":
+        if switch.get("group_id") == "cabinet3_left":
+            state.bc_left_short = True
+        elif switch.get("group_id") == "cabinet3_right":
+            state.bc_right_short = True
+    elif pos == "middle":
+        if switch.get("group_id") == "cabinet3_left":
+            state.bc_left_short = False
+        elif switch.get("group_id") == "cabinet3_right":
+            state.bc_right_short = False
 
     if (current == "on" and pos == "short") or (current == "short" and pos == "on"):
 
@@ -460,6 +492,9 @@ def set_two_switch_position(switch, pos):
 
     switch["id"] = line
     switch["position"] = pos
+    if hasattr(state, "synchro_ui") and state.synchro_ui.visible:
+        state.synchro_ui.update_line_colors()
+
 
 
 

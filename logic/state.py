@@ -40,3 +40,6 @@ synchro_bc_left = None
 synchro_bc_middle = None
 synchro_bc_right = None
 synchro_bridge = None
+
+bc_left_short = False
+bc_right_short = False
