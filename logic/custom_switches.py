@@ -259,48 +259,56 @@ def show_two_switch_menu(event, switch):
                 if both_cabinet3_on:
                     mode = state.synchro_ui.mode_dropdown.get()
 
+                    # --- напряжения ---
                     try:
-                        left_val = float(state.synchro_ui.left_entries[0].get())
+                        left_val  = float(state.synchro_ui.left_entries[0].get())
                         right_val = float(state.synchro_ui.right_entries[0].get())
                     except ValueError:
                         disabled = True
-                        tooltip = "Neplatné hodnoty napětí"
+                        tooltip  = "Neplatné hodnoty napětí"
                         continue
 
-                    if mode == "DeadLine DeadBus":
-                        if not (left_val == 0 and right_val == 0):
+                    # --- остальные параметры (могут быть нечисловые) ---
+                    try:
+                        f_left  = float(state.synchro_ui.left_entries[1].get())
+                        a_left  = float(state.synchro_ui.left_entries[2].get())
+                        f_right = float(state.synchro_ui.right_entries[1].get())
+                        a_right = float(state.synchro_ui.right_entries[2].get())
+
+                        sync_ok = (
+                            left_val != 0 and right_val != 0 and
+                            left_val == right_val and
+                            f_left  == f_right  and
+                            a_left  == a_right
+                        )
+                    except ValueError:
+                        sync_ok = False          # нельзя проверить — значит нет синхро
+
+                    # --- логика режимов ---
+                    if mode == "Both Dead":
+                        if not ((left_val == 0 and right_val == 0) or sync_ok):
                             disabled = True
-                            tooltip = "Obě napětí musí být nulová"
+                            tooltip  = "Obě napětí musí být nulová nebo plná synchronizace"
 
                     elif mode == "LiveLine DeadBus":
-                        if not (left_val != 0 and right_val == 0):
+                        if not ((left_val != 0 and right_val == 0) or sync_ok):
                             disabled = True
-                            tooltip = "Vlevo musí být napětí, vpravo nulové"
+                            tooltip  = "Vlevo napětí, vpravo nula, nebo plná synchronizace"
 
                     elif mode == "DeadLine LiveBus":
-                        if not (left_val == 0 and right_val != 0):
+                        if not ((left_val == 0 and right_val != 0) or sync_ok):
                             disabled = True
-                            tooltip = "Vlevo nulové, vpravo napětí"
+                            tooltip  = "Vlevo nula, vpravo napětí, nebo plná synchronizace"
 
                     elif mode == "LiveLine LiveBus":
-                        try:
-                            u_left = float(state.synchro_ui.left_entries[0].get())
-                            f_left = float(state.synchro_ui.left_entries[1].get())
-                            a_left = float(state.synchro_ui.left_entries[2].get())
-
-                            u_right = float(state.synchro_ui.right_entries[0].get())
-                            f_right = float(state.synchro_ui.right_entries[1].get())
-                            a_right = float(state.synchro_ui.right_entries[2].get())
-                        except ValueError:
+                        if not sync_ok:
                             disabled = True
-                            tooltip = "Neplatné hodnoty parametrů"
-                            continue
+                            tooltip  = "Pro Live/Live musí být úplná synchronizace"
 
-                        if not (
-                            u_left == u_right and f_left == f_right and a_left == a_right and u_left != 0
-                        ):
-                            disabled = True
-                            tooltip = "Parametry se musí shodovat a napětí ≠ 0"
+                    else:
+                        disabled = True
+                        tooltip  = "Neznámý režim"
+
 
 
 

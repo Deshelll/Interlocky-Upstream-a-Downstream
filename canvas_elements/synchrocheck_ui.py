@@ -32,10 +32,9 @@ class SynchroUI:
         self.mode_dropdown = ctk.CTkOptionMenu(
             self.frame,
             values=[
-                "DeadLine DeadBus",
+                "Both Dead",
                 "LiveLine DeadBus",
-                "DeadLine LiveBus",
-                "LiveLine LiveBus"
+                "DeadLine LiveBus"
             ],
             command=lambda _: self.update_line_colors()
         )
@@ -95,23 +94,35 @@ class SynchroUI:
                 return "black"
             return "#14f523" if valid else "red"
 
-        # === проверка валидности
+        # единое условие «полная синхронизация»
+        sync_ok = (
+            u_left != 0 and u_right != 0 and          # обе стороны живые
+            u_left  == u_right and                    # напряжения равны
+            f_left  == f_right  and                   # частоты равны
+            a_left  == a_right                        # углы равны
+        )
+
         match mode:
-            case "DeadLine DeadBus":
-                valid = u_left == 0 and u_right == 0
+            case "DeadLine DeadBus" | "Both Dead":
+                # обе стороны обесточены ИЛИ идеальная синхронизация
+                valid = (u_left == 0 and u_right == 0) or sync_ok
+
             case "LiveLine DeadBus":
-                valid = u_left != 0 and u_right == 0
+                # линия жива, шина мертва ИЛИ идеальная синхронизация
+                valid = (u_left != 0 and u_right == 0) or sync_ok
+
             case "DeadLine LiveBus":
-                valid = u_left == 0 and u_right != 0
+                # линия мертва, шина жива ИЛИ идеальная синхронизация
+                valid = (u_left == 0 and u_right != 0) or sync_ok
+
             case "LiveLine LiveBus":
-                valid = (
-                    u_left == u_right and
-                    f_left == f_right and
-                    a_left == a_right and
-                    u_left != 0
-                )
+                # разрешаем только при синхронизации
+                valid = sync_ok
+
             case _:
                 valid = False
+
+
 
         # === всегда перекрашиваем основные шины
         bus_color = color(u_left, valid)
@@ -181,25 +192,5 @@ class SynchroUI:
                 val = "black"
             state.canvas.itemconfig(state.synchro_bridge, fill=val, width=3 if val != "black" else 1)
                         # === Если хотя бы одна сторона заскратована, и есть напряжение, то открыть двухпозиционный BC
-        left_short = state.bc_left_short
-        right_short = state.bc_right_short
 
-
-        voltage_present = u_left > 0 or u_right > 0
-
-        # === Автоматическое отключение общего двухпозиционного BC
-        if voltage_present:
-            sw_bc = next(
-                (s for s in custom_switches
-                if s["type"] == "two"
-                and s.get("group_id") in ("cabinet3_left", "cabinet3_right")
-                and s["position"] == "on"),
-                None
-            )
-
-            if sw_bc:
-                if left_on and right_short and u_left > 0:
-                    set_two_switch_position(sw_bc, "off")
-                elif right_on and left_short and u_right > 0:
-                    set_two_switch_position(sw_bc, "off")
 
