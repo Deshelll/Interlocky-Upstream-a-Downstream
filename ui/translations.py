@@ -106,8 +106,8 @@ translations = {
     "choose": "Select",
     "reset": "Reset Lockout",
     "toggle_voltage": "Change voltage",
-    "disable_upstream": "Disable Circuit Breaker in Upstream",
-    "disable_downstream": "Disable Circuit Breaker in Downstream",
+    "disable_upstream": "Disable Circuit \nBreaker in Upstream",
+    "disable_downstream": "Disable Circuit \nBreaker in Downstream",
     "select_event": "Select event:",
     "reset_lockout": "Reset Lockout",
     "oil_temp_alarm": "Oil Temperature Alarm",
@@ -138,10 +138,10 @@ translations = {
     "label_frequency": "Frequency",
     "label_angle": "Angle",
     "switch_on": "Disconnector Close",
-    "switch_middle": " Isolated",
-    "switch_short": "Earthed",
-    "switch_on_2": "Open",
-    "switch_off_2": "Close",
+    "switch_middle": " Isolate Position",
+    "switch_short": "Earth Switch Close",
+    "switch_on_2": "Close",
+    "switch_off_2": "Open",
     "tooltip_same_panel_on": "Cannot operate – Circuit Breaker in same panel is Closed",
     "tooltip_direct_transition_blocked": "Direct transition between ON and GND \nis prohibited – must be isolated",
     "tooltip_already_in_position": "Already in this position",
@@ -272,7 +272,7 @@ translations = {
         "tooltip_all_on": "Все выключатели включены"
     },
 }
-current_language = "ru"
+current_language = "en"
 
 def t(key):
     return translations[current_language].get(key, key)
