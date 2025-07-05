@@ -70,6 +70,7 @@ def create_controls(parent, canvas, alarm_text, alarm_rect, event_combobox_ref):
 def create_task2_controls(parent, canvas, synchro_ui):
     from canvas_elements import synchrocheck 
     from canvas_elements.synchrocheck_ui import SynchroUI
+    state.synchro_ui = synchro_ui
     frame = ctk.CTkFrame(parent, width=200)
     frame.pack_propagate(False)
     frame.pack(fill="y", padx=10, pady=10)

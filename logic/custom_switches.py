@@ -245,8 +245,26 @@ def show_two_switch_menu(event, switch):
                     tooltip = t("tooltip_manual_off_only_short")
         if value == "on":
             group = switch.get("group_id")
-            if group in ("cabinet3_left", "cabinet3_right") and state.synchro_ui.visible:
+            if group in ("cabinet3_left", "cabinet3_right"):
 
+                inc1_three_on = any(
+                    sw["type"] == "three" and sw.get("group_id") == "cabinet2" and sw["position"] == "on"
+                    for sw in custom_switches
+                )
+                inc1_two_on = any(
+                    sw["type"] == "two" and sw.get("group_id") == "cabinet2" and sw["position"] == "on"
+                    for sw in custom_switches
+                )
+                inc2_three_on = any(
+                    sw["type"] == "three" and sw.get("group_id") == "cabinet4" and sw["position"] == "on"
+                    for sw in custom_switches
+                )
+                inc2_two_on = any(
+                    sw["type"] == "two" and sw.get("group_id") == "cabinet4" and sw["position"] == "on"
+                    for sw in custom_switches
+                )
+
+                both_incomers_on = inc1_three_on and inc1_two_on and inc2_three_on and inc2_two_on
                 cab3_left_on = any(
                     sw["type"] == "three" and sw.get("group_id") == "cabinet3_left" and sw["position"] == "on"
                     for sw in custom_switches
@@ -256,87 +274,7 @@ def show_two_switch_menu(event, switch):
                     for sw in custom_switches
                 )
 
-                both_cabinet3_on = cab3_left_on and cab3_right_on
-
-                if both_cabinet3_on:
-                    try:
-                        u_left = float(state.synchro_ui.left_entries[0].get())
-                        u_right = float(state.synchro_ui.right_entries[0].get())
-                        f_left = float(state.synchro_ui.left_entries[1].get())
-                        f_right = float(state.synchro_ui.right_entries[1].get())
-                        a_left = float(state.synchro_ui.left_entries[2].get())
-                        a_right = float(state.synchro_ui.right_entries[2].get())
-
-                        selected_label = state.synchro_ui.mode_dropdown.get()
-                        mode_key = state.synchro_ui.mode_keys.get(selected_label, "unknown")
-
-                        sync_ok = (
-                            u_left != 0 and u_right != 0 and
-                            u_left == u_right and
-                            f_left == f_right and
-                            a_left == a_right
-                        )
-
-                        match mode_key:
-                            case "both_dead":
-                                valid = (u_left == 0 and u_right == 0) or sync_ok
-                            case "live_dead":
-                                valid = (u_left != 0 and u_right == 0) or sync_ok
-                            case "dead_live":
-                                valid = (u_left == 0 and u_right != 0) or sync_ok
-
-                    except ValueError:
-                        valid = False
-                        tooltip = t("tooltip_invalid_voltage")
-
-                    if not valid:
-                        disabled = True
-                        if not tooltip:
-                            if mode_key == "both_dead":
-                                tooltip = t("tooltip_both_dead")
-                            elif mode_key == "live_dead":
-                                tooltip = t("tooltip_live_dead")
-                            elif mode_key == "dead_live":
-                                tooltip = t("tooltip_dead_live")
-                            else:
-                                tooltip = t("tooltip_unknown_mode")
-
-
-
-
-
-            if group in ("cabinet2", "cabinet4"):
-                other = "cabinet4" if group == "cabinet2" else "cabinet2"
-
-                other_three_on = any(
-                    sw["type"] == "three" and sw.get("group_id") == other and sw["position"] == "on"
-                    for sw in custom_switches
-                )
-                other_two_on = any(
-                    sw["type"] == "two" and sw.get("group_id") == other and sw["position"] == "on"
-                    for sw in custom_switches
-                )
-
-                left_three_on = any(
-                    sw["type"] == "three" and sw.get("group_id") == "cabinet3_left" and sw["position"] == "on"
-                    for sw in custom_switches
-                )
-                right_three_on = any(
-                    sw["type"] == "three" and sw.get("group_id") == "cabinet3_right" and sw["position"] == "on"
-                    for sw in custom_switches
-                )
-                two_on_bc = any(
-                    sw["type"] == "two" and sw.get("group_id") in ("cabinet3_left", "cabinet3_right") and sw["position"] == "on"
-                    for sw in custom_switches
-                )
-
-
-                local_three_on = any(
-                    sw["type"] == "three" and sw.get("group_id") == group and sw["position"] == "on"
-                    for sw in custom_switches
-                )
-
-                if other_three_on and other_two_on and left_three_on and right_three_on and two_on_bc and local_three_on:
+                if both_incomers_on and cab3_left_on and cab3_right_on:
                     if hasattr(state, "synchro_ui") and state.synchro_ui.visible:
                         try:
                             u_left = float(state.synchro_ui.left_entries[0].get())
@@ -363,26 +301,59 @@ def show_two_switch_menu(event, switch):
                                     valid = (u_left != 0 and u_right == 0) or sync_ok
                                 case "dead_live":
                                     valid = (u_left == 0 and u_right != 0) or sync_ok
+                                case "live_live":
+                                    valid = sync_ok
+                                case _:
+                                    valid = False
 
-                        except ValueError:
-                            valid_sync = False
+                        except Exception:
+                            valid = False
 
-                        if valid_sync:
-                            disabled = False
-                            tooltip = None
-                            menu.add_option(
-                                label,
-                                command=lambda v=value: set_two_switch_position(switch, v),
-                                enabled=not is_current and not disabled,
-                                highlight=is_current,
-                                tooltip_text=tooltip
-                            )
-                            menu.show(event.x_root, event.y_root)
-                            menu.close_on_click_outside()
-                            return  # ✅ ключевая строка!
-                        else:
+                        if not valid:
                             disabled = True
-                            tooltip = t("tooltip_incomers_and_bc_active")
+                            tooltip = t("tooltip_sync_blocked")
+
+                    else:
+                        # === Синхрочек не активен — запрещаем
+                        disabled = True
+                        tooltip = t("tooltip_sync_blocked")
+
+
+
+
+
+            if group in ("cabinet2", "cabinet4"):
+                other = "cabinet4" if group == "cabinet2" else "cabinet2"
+
+                other_three_on = any(
+                    sw["type"] == "three" and sw.get("group_id") == other and sw["position"] == "on"
+                    for sw in custom_switches
+                )
+                other_two_on = any(
+                    sw["type"] == "two" and sw.get("group_id") == other and sw["position"] == "on"
+                    for sw in custom_switches
+                )
+
+                bc_left_on = any(
+                    sw["type"] == "three" and sw.get("group_id") == "cabinet3_left" and sw["position"] == "on"
+                    for sw in custom_switches
+                )
+                bc_right_on = any(
+                    sw["type"] == "three" and sw.get("group_id") == "cabinet3_right" and sw["position"] == "on"
+                    for sw in custom_switches
+                )
+                bc_cb_on = any(
+                    sw["type"] == "two" and sw.get("group_id") == "cabinet3_left" and sw["position"] == "on"
+                    for sw in custom_switches
+                )
+
+                bc_closed = bc_left_on and bc_right_on and bc_cb_on
+
+                if other_three_on and other_two_on and bc_closed:
+                    disabled = True
+                    tooltip = t("tooltip_other_incomer_active")
+
+
 
 
 

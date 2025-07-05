@@ -194,7 +194,7 @@ def on_switch_click(event, canvas):
 
     for pos, label in items:
         result = allowed_map[pos]
-        highlight = (result == "current") if any_enabled else False
+        highlight = (result == "current") 
         tooltip = None
         if isinstance(result, tuple):
             tooltip = result[1]
@@ -214,7 +214,7 @@ def on_lower_switch_click(event, canvas):
 
     for pos, label in items:
         result = allowed_map[pos]
-        highlight = (result == "current") if any_enabled else False
+        highlight = (result == "current") 
         tooltip = None
         if isinstance(result, tuple):
             tooltip = result[1]
@@ -234,7 +234,7 @@ def on_middle_upper_click(event, canvas):
 
     for pos, label in items:
         result = allowed_map[pos]
-        highlight = (result == "current") if any_enabled else False
+        highlight = (result == "current") 
         tooltip = None
         if isinstance(result, tuple):
             tooltip = result[1]
@@ -254,7 +254,7 @@ def on_middle_lower_click(event, canvas):
 
     for pos, label in items:
         result = allowed_map[pos]
-        highlight = (result == "current") if any_enabled else False
+        highlight = (result == "current") 
         tooltip = None
         if isinstance(result, tuple):
             tooltip = result[1]

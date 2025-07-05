@@ -45,7 +45,7 @@ class SynchroUI:
             values=mode_labels,
             command=lambda _: self.update_line_colors()
         )
-
+        state.synchro_ui = self
 
 
     def _add_row(self, parent, label_text, default_value=""):
