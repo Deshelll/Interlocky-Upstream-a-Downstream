@@ -43,3 +43,6 @@ synchro_bridge = None
 
 bc_left_short = False
 bc_right_short = False
+
+synchro_input_left = None
+synchro_input_right = None

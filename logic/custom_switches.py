@@ -1,5 +1,7 @@
 from ui.context_menu import CustomContextMenu
 from logic import state
+from ui.translations import t, switch_language
+
 
 custom_switches = []
 
@@ -86,9 +88,9 @@ def show_three_switch_menu(event, switch):
 
 
     options = [
-        ("on", "Zajet Disconnectorem"),
-        ("middle", "Mezipoloha"),
-        ("short", "Zazkratovat")
+        ("on", t("switch_on")),
+        ("middle", t("switch_middle")),
+        ("short", t("switch_short"))
     ]
 
     for value, label in options:
@@ -99,7 +101,7 @@ def show_three_switch_menu(event, switch):
 
         if block_due_to_local_two:
             disabled = True
-            tooltip = "Nelze operovat – vypínač ve stejném panelu je zapnutý"
+            tooltip = t("tooltip_same_panel_on")
 
 
         if not disabled:
@@ -111,7 +113,7 @@ def show_three_switch_menu(event, switch):
 
             if (current == "on" and value == "short") or (current == "short" and value == "on"):
                 disabled = True
-                tooltip = "Přímý přechod mezi ON a Zazkratovat je zakázán – použijte mezipolohu"
+                tooltip = t("tooltip_direct_transition_blocked")
 
 
 
@@ -125,7 +127,7 @@ def show_three_switch_menu(event, switch):
                 for sw in custom_switches
             ):
                 disabled = True
-                tooltip = "Nelze vypnout – druhý třípolohový spínač je zkratován"
+                tooltip = t("tooltip_other_switch_shorted")
 
 
         if value == "on":
@@ -136,7 +138,7 @@ def show_three_switch_menu(event, switch):
             elif group in ("cabinet1", "cabinet2"):
                 if any(sw["group_id"] == "cabinet3_right" and sw["position"] == "short" for sw in custom_switches):
                     disabled = True
-                    tooltip = "Nelze zapnout: pravý zkratovač BC je aktivní"
+                    tooltip = t("tooltip_bc_right_on")
 
 
         if value == "short":
@@ -160,21 +162,21 @@ def show_three_switch_menu(event, switch):
 
                 if any(sw["position"] == "short" for sw in other):
                     disabled = True
-                    tooltip = "Nelze zazkratovat: v tomto poli je již zkratováno"
+                    tooltip = t("tooltip_already_earthed")
                 elif not any(sw["position"] == "on" for sw in other):
                     disabled = True
-                    tooltip = "Zkratovat lze pouze pokud druhý spínač je ve stavu ON"
+                    tooltip = t("tooltip_earth_only_if_other_on")
             if group == "cabinet3_left":
                 u_right = get_synchro_voltage("right")
                 if u_right > 0:
                     disabled = True
-                    tooltip = "Nelze zazkratovat: na pravém sběrnici je napětí"
+                    tooltip = tooltip = t("tooltip_voltage_on_right")
 
             elif group == "cabinet3_right":
                 u_left = get_synchro_voltage("left")
                 if u_left > 0:
                     disabled = True
-                    tooltip = "Nelze zazkratovat: na levém sběrnici je napětí"
+                    tooltip = t("tooltip_voltage_on_left")
 
             if not disabled:
                 if any(
@@ -184,7 +186,7 @@ def show_three_switch_menu(event, switch):
                     for sw in custom_switches
                 ):
                     disabled = True
-                    tooltip = "Zkratovat nelze, pokud v druhém rozvaděči je odpojovač zapnutý."
+                    tooltip = t("tooltip_other_disconnector_on")
 
 
 
@@ -206,8 +208,8 @@ def show_three_switch_menu(event, switch):
 def show_two_switch_menu(event, switch):
     menu = CustomContextMenu(switch["canvas"])
     options = [
-        ("on", "Zapnout"),
-        ("off", "Vypnout")
+        ("on", t("switch_on_2")),
+        ("off", t("switch_off_2"))
     ]
 
     for value, label in options:
@@ -229,7 +231,7 @@ def show_two_switch_menu(event, switch):
 
                 if one_in_short and one_in_on:
                     disabled = True
-                    tooltip = "Vypnutí je možné pouze pomocí manuálního tlačítka, pokud jste ve stavu „Zazkratováno“."
+                    tooltip = t("tooltip_manual_off_only_short")
             else:
 
                 three_in_short = any(
@@ -240,7 +242,7 @@ def show_two_switch_menu(event, switch):
                 )
                 if three_in_short:
                     disabled = True
-                    tooltip = "Vypnutí je možné pouze pomocí manuálního tlačítka, pokud jste ve stavu „Zazkratováno“."
+                    tooltip = t("tooltip_manual_off_only_short")
         if value == "on":
             group = switch.get("group_id")
             if group in ("cabinet3_left", "cabinet3_right") and state.synchro_ui.visible:
@@ -257,57 +259,47 @@ def show_two_switch_menu(event, switch):
                 both_cabinet3_on = cab3_left_on and cab3_right_on
 
                 if both_cabinet3_on:
-                    mode = state.synchro_ui.mode_dropdown.get()
-
-                    # --- напряжения ---
                     try:
-                        left_val  = float(state.synchro_ui.left_entries[0].get())
-                        right_val = float(state.synchro_ui.right_entries[0].get())
-                    except ValueError:
-                        disabled = True
-                        tooltip  = "Neplatné hodnoty napětí"
-                        continue
-
-                    # --- остальные параметры (могут быть нечисловые) ---
-                    try:
-                        f_left  = float(state.synchro_ui.left_entries[1].get())
-                        a_left  = float(state.synchro_ui.left_entries[2].get())
+                        u_left = float(state.synchro_ui.left_entries[0].get())
+                        u_right = float(state.synchro_ui.right_entries[0].get())
+                        f_left = float(state.synchro_ui.left_entries[1].get())
                         f_right = float(state.synchro_ui.right_entries[1].get())
+                        a_left = float(state.synchro_ui.left_entries[2].get())
                         a_right = float(state.synchro_ui.right_entries[2].get())
 
+                        selected_label = state.synchro_ui.mode_dropdown.get()
+                        mode_key = state.synchro_ui.mode_keys.get(selected_label, "unknown")
+
                         sync_ok = (
-                            left_val != 0 and right_val != 0 and
-                            left_val == right_val and
-                            f_left  == f_right  and
-                            a_left  == a_right
+                            u_left != 0 and u_right != 0 and
+                            u_left == u_right and
+                            f_left == f_right and
+                            a_left == a_right
                         )
+
+                        match mode_key:
+                            case "both_dead":
+                                valid = (u_left == 0 and u_right == 0) or sync_ok
+                            case "live_dead":
+                                valid = (u_left != 0 and u_right == 0) or sync_ok
+                            case "dead_live":
+                                valid = (u_left == 0 and u_right != 0) or sync_ok
+
                     except ValueError:
-                        sync_ok = False          # нельзя проверить — значит нет синхро
+                        valid = False
+                        tooltip = t("tooltip_invalid_voltage")
 
-                    # --- логика режимов ---
-                    if mode == "Both Dead":
-                        if not ((left_val == 0 and right_val == 0) or sync_ok):
-                            disabled = True
-                            tooltip  = "Obě napětí musí být nulová nebo plná synchronizace"
-
-                    elif mode == "LiveLine DeadBus":
-                        if not ((left_val != 0 and right_val == 0) or sync_ok):
-                            disabled = True
-                            tooltip  = "Vlevo napětí, vpravo nula, nebo plná synchronizace"
-
-                    elif mode == "DeadLine LiveBus":
-                        if not ((left_val == 0 and right_val != 0) or sync_ok):
-                            disabled = True
-                            tooltip  = "Vlevo nula, vpravo napětí, nebo plná synchronizace"
-
-                    elif mode == "LiveLine LiveBus":
-                        if not sync_ok:
-                            disabled = True
-                            tooltip  = "Pro Live/Live musí být úplná synchronizace"
-
-                    else:
+                    if not valid:
                         disabled = True
-                        tooltip  = "Neznámý režim"
+                        if not tooltip:
+                            if mode_key == "both_dead":
+                                tooltip = t("tooltip_both_dead")
+                            elif mode_key == "live_dead":
+                                tooltip = t("tooltip_live_dead")
+                            elif mode_key == "dead_live":
+                                tooltip = t("tooltip_dead_live")
+                            else:
+                                tooltip = t("tooltip_unknown_mode")
 
 
 
@@ -346,7 +338,6 @@ def show_two_switch_menu(event, switch):
 
                 if other_three_on and other_two_on and left_three_on and right_three_on and two_on_bc and local_three_on:
                     if hasattr(state, "synchro_ui") and state.synchro_ui.visible:
-                        mode = state.synchro_ui.mode_dropdown.get()
                         try:
                             u_left = float(state.synchro_ui.left_entries[0].get())
                             u_right = float(state.synchro_ui.right_entries[0].get())
@@ -354,28 +345,45 @@ def show_two_switch_menu(event, switch):
                             f_right = float(state.synchro_ui.right_entries[1].get())
                             a_left = float(state.synchro_ui.left_entries[2].get())
                             a_right = float(state.synchro_ui.right_entries[2].get())
+
+                            selected_label = state.synchro_ui.mode_dropdown.get()
+                            mode_key = state.synchro_ui.mode_keys.get(selected_label, "unknown")
+
+                            sync_ok = (
+                                u_left != 0 and u_right != 0 and
+                                u_left == u_right and
+                                f_left == f_right and
+                                a_left == a_right
+                            )
+
+                            match mode_key:
+                                case "both_dead":
+                                    valid = (u_left == 0 and u_right == 0) or sync_ok
+                                case "live_dead":
+                                    valid = (u_left != 0 and u_right == 0) or sync_ok
+                                case "dead_live":
+                                    valid = (u_left == 0 and u_right != 0) or sync_ok
+
                         except ValueError:
                             valid_sync = False
-                        else:
-                            match mode:
-                                case "DeadLine DeadBus":
-                                    valid_sync = u_left == 0 and u_right == 0
-                                case "LiveLine DeadBus":
-                                    valid_sync = u_left != 0 and u_right == 0
-                                case "DeadLine LiveBus":
-                                    valid_sync = u_left == 0 and u_right != 0
-                                case "LiveLine LiveBus":
-                                    valid_sync = (
-                                        u_left == u_right and f_left == f_right and a_left == a_right and u_left != 0
-                                    )
-                                case _:
-                                    valid_sync = False
 
                         if valid_sync:
                             disabled = False
                             tooltip = None
-                    disabled = True
-                    tooltip = "Nelze zapnout: oba Incomery by byly aktivní a rozvaděč BC je již celý zapnutý"
+                            menu.add_option(
+                                label,
+                                command=lambda v=value: set_two_switch_position(switch, v),
+                                enabled=not is_current and not disabled,
+                                highlight=is_current,
+                                tooltip_text=tooltip
+                            )
+                            menu.show(event.x_root, event.y_root)
+                            menu.close_on_click_outside()
+                            return  # ✅ ключевая строка!
+                        else:
+                            disabled = True
+                            tooltip = t("tooltip_incomers_and_bc_active")
+
 
 
 
@@ -398,34 +406,43 @@ def show_two_switch_menu(event, switch):
                 )
 
                 if inc1_three_on and inc1_two_on and inc2_three_on and inc2_two_on:
-                    valid_sync = False
-                    if hasattr(state, "synchro_ui") and state.synchro_ui.visible:
-                        try:
-                            u_left = float(state.synchro_ui.left_entries[0].get())
-                            f_left = float(state.synchro_ui.left_entries[1].get())
-                            a_left = float(state.synchro_ui.left_entries[2].get())
-                            u_right = float(state.synchro_ui.right_entries[0].get())
-                            f_right = float(state.synchro_ui.right_entries[1].get())
-                            a_right = float(state.synchro_ui.right_entries[2].get())
-                            mode = state.synchro_ui.mode_dropdown.get()
+                    try:
+                        u_left = float(state.synchro_ui.left_entries[0].get())
+                        u_right = float(state.synchro_ui.right_entries[0].get())
+                        f_left = float(state.synchro_ui.left_entries[1].get())
+                        f_right = float(state.synchro_ui.right_entries[1].get())
+                        a_left = float(state.synchro_ui.left_entries[2].get())
+                        a_right = float(state.synchro_ui.right_entries[2].get())
 
-                            match mode:
-                                case "DeadLine DeadBus":
-                                    valid_sync = u_left == 0 and u_right == 0
-                                case "LiveLine DeadBus":
-                                    valid_sync = u_left != 0 and u_right == 0
-                                case "DeadLine LiveBus":
-                                    valid_sync = u_left == 0 and u_right != 0
-                                case "LiveLine LiveBus":
-                                    valid_sync = (
-                                        u_left == u_right and f_left == f_right and a_left == a_right and u_left != 0
-                                    )
-                        except:
-                            valid_sync = False
+                        selected_label = state.synchro_ui.mode_dropdown.get()
+                        mode_key = state.synchro_ui.mode_keys.get(selected_label, "unknown")
+
+                        sync_ok = (
+                            u_left != 0 and u_right != 0 and
+                            u_left == u_right and
+                            f_left == f_right and
+                            a_left == a_right
+                        )
+
+                        match mode_key:
+                            case "both_dead":
+                                valid_sync = (u_left == 0 and u_right == 0) or sync_ok
+                            case "live_dead":
+                                valid_sync = (u_left != 0 and u_right == 0) or sync_ok
+                            case "dead_live":
+                                valid_sync = (u_left == 0 and u_right != 0) or sync_ok
+                            case "live_live":
+                                valid_sync = sync_ok
+                            case _:
+                                valid_sync = False
+
+                    except Exception:
+                        valid_sync = False
 
                     if not valid_sync:
                         disabled = True
-                        tooltip = "Nelze zapnout: oba Incomery jsou plně zapnuté – nelze propojit rozvaděče"
+                        tooltip = t("tooltip_sync_blocked")
+
 
 
 
@@ -555,9 +572,9 @@ def is_group_conflict(switch, new_pos):
             return False
 
         if switch.get("type") == "two":
-            return "Nelze zapnout: druhý Incomer je již aktivní a BC je celý zapnutý"
+            return t("tooltip_other_incomer_active")
 
-        return "Incomer je již aktivní"
+        return t("tooltip_incomer_already_active")
 
 
 

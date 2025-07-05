@@ -4,87 +4,87 @@ from logic import state
 from ui.context_menu import CustomContextMenu
 from canvas_elements import Line, GroundSymbol
 from logic import state, switches
-
+from ui.translations import t
 
 
 def is_switch_transition_allowed(position):
 
     if position == "short" and state.current_lower_switch_state == "on":
-        return ("lower_on_block", "Nelze zazkratovat, pokud je disconnector Downstream připojen k přípojnici")
+        return ("lower_on_block", t("tooltip_lower_on_block"))
 
 
     if position == "on" and state.current_lower_switch_state == "short":
-        return ("lower_short_block", "Nelze zapnout: Downstream zkratovač je zkratován")
+        return ("lower_short_block", t("tooltip_lower_short_block"))
     if state.current_switch_state == position:
         return "current"
     if state.current_middle_upper_state == "on" and position in ("on", "short"):
-        return ("middle_upper", "Nelze vybrat: Upstream vypínač je již zapnutý")
+        return ("middle_upper", t("tooltip_middle_upper"))
     if state.current_middle_upper_state == "on" and state.current_switch_state in ("on", "short") and position == "middle":
-        return ("mid_back", "Nejdříve musíte vypnout vypínač")
+        return ("mid_back", t("tooltip_mid_back"))
     if state.voltage_state == 1 and position == "short":
-        return ("voltage_short", "Nelze zazkratovat, pokud je na kabelech napětí")
+        return ("voltage_short", t("tooltip_voltage_short"))
     if state.current_switch_state == "on" and position == "short":
-        return ("on_short", "Nelze přeskočit mezipolohu mezi „Disconnector On“ a „Zazkratovat“")
+        return ("on_short", t("tooltip_on_short"))
     return True
 
 def is_lower_switch_transition_allowed(position):
 
     if position == "short" and state.current_switch_state == "on":
-        return ("upper_on_block", "Nelze zazkratovat, pokud je disconnector Upstream připojen k přípojnici")
+        return ("upper_on_block", t("tooltip_upper_on_block"))
 
 
     if position == "on" and state.current_switch_state == "short":
-        return ("upper_short_block", "Nelze zapnout: Upstream zkratovač je zkratován")
+        return ("upper_short_block", t("tooltip_upper_short_block"))
     if state.current_lower_switch_state == position:
         return "current"
     if not state.set_middle_lower_position_allowed and position == "on":
-        return ("not_allowed", "Zapnutí je zakázáno")
+        return ("not_allowed", t("tooltip_not_allowed"))
     if position in ("on", "short") and state.current_lower_switch_state != "middle":
-        return ("not_middle", "Nelze přeskočit mezipolohu mezi „Disconnector On“ a „Zazkratovat“")
+        return ("not_middle", t("tooltip_not_middle"))
     if state.current_middle_lower_state == "on" and position in ("on", "short"):
-        return ("ml_on", "Downstream vypínač je v poloze „zapnuto“")
+        return ("ml_on", t("tooltip_ml_on"))
     if state.current_middle_lower_state == "on" and state.current_lower_switch_state in ("on", "short") and position == "middle":
-        return ("ml_mid_block", "Nelze přepnout do mezipolohy — vypínač je aktivní.")
+        return ("ml_mid_block", t("tooltip_ml_mid_block"))
     if state.current_lower_switch_state == "on" and position == "short":
-        return ("lower_on_short", "Nejdříve musíte vypnout vypínač")
+        return ("lower_on_short", t("tooltip_lower_on_short"))
     if state.voltage_state == 1 and position == "short":
-        return ("voltage_short", "Nelze zazkratovat, pokud je na kabelech napětí")
+        return ("voltage_short", t("tooltip_voltage_short"))
     return True
 
 def is_middle_upper_transition_allowed(position):
 
     if position == "off":
         if state.current_switch_state == "short":
-            return ("short_block", "Odzkratujte pomocí manuálního tlačítka")
+            return ("short_block", t("tooltip_short_block"))
     if state.current_middle_upper_state == position:
         return "current"
     if not state.set_middle_upper_position_allowed and position == "on":
-        return ("not_allowed", "Resetujte Lockout")
+        return ("not_allowed", t("tooltip_reset_required"))
     if (
         position == "on"
         and state.current_middle_lower_state == "on"
         and state.current_lower_switch_state == "on"
         and state.current_switch_state == "on"
     ):
-        return ("all_on", "Všechny vypínače jsou zapnuté")
+        return ("all_on", t("tooltip_all_on"))
     return True
 
 def is_middle_lower_transition_allowed(position):
 
     if position == "off" and state.current_middle_lower_state == "on":
         if state.current_lower_switch_state == "short":
-            return ("short_block", "Pro odzkratování použijte manuální tlačítko")
+            return ("short_block", t("tooltip_short_block"))
 
 
     if state.current_middle_lower_state == position:
         return "current"
 
     if not state.set_middle_lower_position_allowed and position == "on":
-        return ("not_allowed", "Resetujte Lockout")
+        return ("not_allowed", t("tooltip_reset_required"))
     if position == "on" and state.current_middle_upper_state != "on":
-        return ("mu_off", "Nejdříve musíte zapnout vypínač Upstream")
+        return ("mu_off", t("tooltip_mu_off"))
     if state.voltage_state == 1 and position == "on" and state.current_lower_switch_state == "on":
-        return ("voltage_block", "Na kabelech je napětí")
+        return ("voltage_block", t("tooltip_voltage_block"))
 
     return True
 
@@ -187,7 +187,7 @@ def set_middle_lower_position(position, canvas):
 
 def on_switch_click(event, canvas):
     menu = CustomContextMenu(canvas)
-    items = [("on", "Zajet Disconnectorem"), ("middle", "Mezipoloha"), ("short", "Zazkratovat")]
+    items = [("on", t("switch_on")), ("middle", t("switch_middle")), ("short", t("switch_short"))]
 
     allowed_map = {pos: is_switch_transition_allowed(pos) for pos, _ in items}
     any_enabled = any(v is True for v in allowed_map.values())
@@ -199,7 +199,7 @@ def on_switch_click(event, canvas):
         if isinstance(result, tuple):
             tooltip = result[1]
         elif highlight:
-            tooltip = "Jste již v této poloze"
+            tooltip = t("tooltip_already_in_position")
         menu.add_option(label, lambda p=pos: set_switch_position(p, canvas), enabled=(result is True), highlight=highlight, tooltip_text=tooltip)
 
     menu.show(event.x_root, event.y_root)
@@ -207,7 +207,7 @@ def on_switch_click(event, canvas):
 
 def on_lower_switch_click(event, canvas):
     menu = CustomContextMenu(canvas)
-    items = [("on", "Zajet Disconnectorem"), ("middle", "Mezipoloha"), ("short", "Zazkratovat")]
+    items = [("on", t("switch_on")), ("middle", t("switch_middle")), ("short", t("switch_short"))]
 
     allowed_map = {pos: is_lower_switch_transition_allowed(pos) for pos, _ in items}
     any_enabled = any(v is True for v in allowed_map.values())
@@ -219,7 +219,7 @@ def on_lower_switch_click(event, canvas):
         if isinstance(result, tuple):
             tooltip = result[1]
         elif highlight:
-            tooltip = "Jste již v této poloze"
+            tooltip = t("tooltip_already_in_position")
         menu.add_option(label, lambda p=pos: set_lower_switch_position(p, canvas), enabled=(result is True), highlight=highlight, tooltip_text=tooltip)
 
     menu.show(event.x_root, event.y_root)
@@ -227,7 +227,7 @@ def on_lower_switch_click(event, canvas):
 
 def on_middle_upper_click(event, canvas):
     menu = CustomContextMenu(canvas)
-    items = [("on", "Zapnout"), ("off", "Vypnout")]
+    items = [("on", t("switch_on_2")), ("off", t("switch_off_2"))]
 
     allowed_map = {pos: is_middle_upper_transition_allowed(pos) for pos, _ in items}
     any_enabled = any(v is True for v in allowed_map.values())
@@ -239,7 +239,7 @@ def on_middle_upper_click(event, canvas):
         if isinstance(result, tuple):
             tooltip = result[1]
         elif highlight:
-            tooltip = "Jste již v této poloze"
+            tooltip = t("tooltip_already_in_position")
         menu.add_option(label, lambda p=pos: set_middle_upper_position(p, canvas), enabled=(result is True), highlight=highlight, tooltip_text=tooltip)
 
     menu.show(event.x_root, event.y_root)
@@ -247,7 +247,7 @@ def on_middle_upper_click(event, canvas):
 
 def on_middle_lower_click(event, canvas):
     menu = CustomContextMenu(canvas)
-    items = [("on", "Zapnout"), ("off", "Vypnout")]
+    items = [("on", t("switch_on_2")), ("off", t("switch_off_2"))]
 
     allowed_map = {pos: is_middle_lower_transition_allowed(pos) for pos, _ in items}
     any_enabled = any(v is True for v in allowed_map.values())
@@ -259,7 +259,7 @@ def on_middle_lower_click(event, canvas):
         if isinstance(result, tuple):
             tooltip = result[1]
         elif highlight:
-            tooltip = "Jste již v této poloze"
+            tooltip = t("tooltip_already_in_position")
         menu.add_option(label, lambda p=pos: set_middle_lower_position(p, canvas), enabled=(result is True), highlight=highlight, tooltip_text=tooltip)
 
     menu.show(event.x_root, event.y_root)

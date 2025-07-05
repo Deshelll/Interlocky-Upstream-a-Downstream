@@ -2,6 +2,7 @@ import customtkinter as ctk
 from logic import state
 from logic import custom_switches
 from logic.custom_switches import custom_switches, set_two_switch_position
+from ui.translations import t, switch_language
 
 class SynchroUI:
     def __init__(self, parent):
@@ -20,7 +21,8 @@ class SynchroUI:
         self.left_column.pack(side="left", padx=20)
         self.right_column.pack(side="left", padx=20)
 
-        self.labels = ["Napětí", "Frekvence", "Úhel"]
+        
+        self.labels = [t("label_voltage"), t("label_frequency"), t("label_angle")]
         defaults = ["0", "50", "0"]
 
         for label, default in zip(self.labels, defaults):
@@ -29,17 +31,22 @@ class SynchroUI:
 
 
 
+        self.mode_keys = {
+            t("mode_both_dead"): "both_dead",
+            t("mode_live_dead"): "live_dead",
+            t("mode_dead_live"): "dead_live"
+        }
+
+        # Переведённые строки для показа
+        mode_labels = list(self.mode_keys.keys())
+
         self.mode_dropdown = ctk.CTkOptionMenu(
             self.frame,
-            values=[
-                "Both Dead",
-                "LiveLine DeadBus",
-                "DeadLine LiveBus"
-            ],
+            values=mode_labels,
             command=lambda _: self.update_line_colors()
         )
 
-        self.mode_dropdown.pack(pady=(10, 5))
+
 
     def _add_row(self, parent, label_text, default_value=""):
         row = ctk.CTkFrame(parent)
@@ -94,103 +101,97 @@ class SynchroUI:
                 return "black"
             return "#14f523" if valid else "red"
 
-        # единое условие «полная синхронизация»
         sync_ok = (
-            u_left != 0 and u_right != 0 and          # обе стороны живые
-            u_left  == u_right and                    # напряжения равны
-            f_left  == f_right  and                   # частоты равны
-            a_left  == a_right                        # углы равны
+            u_left != 0 and u_right != 0 and
+            u_left == u_right and
+            f_left == f_right and
+            a_left == a_right
         )
 
-        match mode:
-            case "DeadLine DeadBus" | "Both Dead":
-                # обе стороны обесточены ИЛИ идеальная синхронизация
+        selected_label = self.mode_dropdown.get()
+        mode_key = self.mode_keys.get(selected_label, "unknown")
+
+        match mode_key:
+            case "both_dead":
                 valid = (u_left == 0 and u_right == 0) or sync_ok
-
-            case "LiveLine DeadBus":
-                # линия жива, шина мертва ИЛИ идеальная синхронизация
+            case "live_dead":
                 valid = (u_left != 0 and u_right == 0) or sync_ok
-
-            case "DeadLine LiveBus":
-                # линия мертва, шина жива ИЛИ идеальная синхронизация
+            case "dead_live":
                 valid = (u_left == 0 and u_right != 0) or sync_ok
-
-            case "LiveLine LiveBus":
-                # разрешаем только при синхронизации
+            case "live_live":
                 valid = sync_ok
-
             case _:
                 valid = False
 
+        for name in (
+            "synchro_input_left", "synchro_input_right",
+            "synchro_bus_id", "synchro_bus_tail",
+            "synchro_line_id", "synchro_line_tail",
+            "synchro_bc_left", "synchro_bc_middle", "synchro_bc_right",
+            "synchro_bridge"
+        ):
+            el = getattr(state, name, None)
+            if el:
+                state.canvas.itemconfig(el, fill="black", width=1)
 
+        left_on = any(sw["type"] == "three" and sw.get("group_id") == "cabinet3_left" and sw["position"] == "on" for sw in custom_switches)
+        right_on = any(sw["type"] == "three" and sw.get("group_id") == "cabinet3_right" and sw["position"] == "on" for sw in custom_switches)
+        bc_two_on = any(sw["type"] == "two" and sw.get("group_id") in ("cabinet3_left", "cabinet3_right") and sw["position"] == "on" for sw in custom_switches)
 
-        # === всегда перекрашиваем основные шины
-        bus_color = color(u_left, valid)
-        line_color = color(u_right, valid)
+        # === Трассировка от левой стороны (BUS), теперь от u_right
+        if u_right != 0:
+            clr = color(u_right, valid)
+            reached = True
+            for name in ("synchro_input_left", "synchro_bus_id", "synchro_bus_tail"):
+                el = getattr(state, name, None)
+                if el:
+                    state.canvas.itemconfig(el, fill=clr, width=3)
 
-        if state.synchro_bus_id:
-            state.canvas.itemconfig(state.synchro_bus_id, fill=bus_color, width=3 if bus_color != "black" else 1)
-        if state.synchro_bus_tail:
-            state.canvas.itemconfig(state.synchro_bus_tail, fill=bus_color, width=3 if bus_color != "black" else 1)
-        if state.synchro_line_id:
-            state.canvas.itemconfig(state.synchro_line_id, fill=line_color, width=3 if line_color != "black" else 1)
-        if state.synchro_line_tail:
-            state.canvas.itemconfig(state.synchro_line_tail, fill=line_color, width=3 if line_color != "black" else 1)
-
-        # === логика по трёхпозиционникам
-        left_on = any(
-            sw["type"] == "three" and sw.get("group_id") == "cabinet3_left" and sw["position"] == "on"
-            for sw in custom_switches
-        )
-        right_on = any(
-            sw["type"] == "three" and sw.get("group_id") == "cabinet3_right" and sw["position"] == "on"
-            for sw in custom_switches
-        )
-        bc_two_on = any(
-            sw["type"] == "two" and sw.get("group_id") in ("cabinet3_left", "cabinet3_right") and sw["position"] == "on"
-            for sw in custom_switches
-        )
-        # === линии внутри BC
-
-# === synchro_bc_middle (отображает правую сторону, если она активна)
-        if state.synchro_bc_middle:
-            if left_on:
-                val = color(u_left, valid)
-            elif right_on and bc_two_on:
-                val = color(u_right, valid)
+            if reached and left_on:
+                if state.synchro_bc_middle:
+                    state.canvas.itemconfig(state.synchro_bc_middle, fill=clr, width=3)
             else:
-                val = "black"
-            state.canvas.itemconfig(state.synchro_bc_middle, fill=val, width=3 if val != "black" else 1)
+                reached = False
 
-        # === synchro_bc_left
-        if state.synchro_bc_left:
-            if right_on:
-                val = color(u_right, valid)
-            elif left_on and bc_two_on:
-                val = color(u_left, valid)
+            if reached and bc_two_on:
+                for name in ("synchro_bc_left", "synchro_bc_right", "synchro_bridge"):
+                    el = getattr(state, name, None)
+                    if el:
+                        state.canvas.itemconfig(el, fill=clr, width=3)
             else:
-                val = "black"
-            state.canvas.itemconfig(state.synchro_bc_left, fill=val, width=3 if val != "black" else 1)
+                reached = False
 
-        # === synchro_bc_right — только при right_on
-        if state.synchro_bc_right:
-            if right_on:
-                val = color(u_right, valid)
-            elif left_on and bc_two_on:
-                val = color(u_left, valid)
+            if reached and right_on:
+                for name in ("synchro_line_tail", "synchro_line_id", "synchro_input_right"):
+                    el = getattr(state, name, None)
+                    if el:
+                        state.canvas.itemconfig(el, fill=clr, width=3)
+
+        # === Трассировка от правой стороны (LINE), теперь от u_left
+        if u_left != 0:
+            clr = color(u_left, valid)
+            reached = True
+            for name in ("synchro_input_right", "synchro_line_tail", "synchro_line_id"):
+                el = getattr(state, name, None)
+                if el:
+                    state.canvas.itemconfig(el, fill=clr, width=3)
+
+            if reached and right_on:
+                for name in ("synchro_bc_right", "synchro_bc_left", "synchro_bridge"):
+                    el = getattr(state, name, None)
+                    if el:
+                        state.canvas.itemconfig(el, fill=clr, width=3)
             else:
-                val = "black"
-            state.canvas.itemconfig(state.synchro_bc_right, fill=val, width=3 if val != "black" else 1)
+                reached = False
 
-        # === synchro_bridge
-        if state.synchro_bridge:
-            if right_on:
-                val = color(u_right, valid)
-            elif left_on and bc_two_on:
-                val = color(u_left, valid)
+            if reached and bc_two_on:
+                if state.synchro_bc_middle:
+                    state.canvas.itemconfig(state.synchro_bc_middle, fill=clr, width=3)
             else:
-                val = "black"
-            state.canvas.itemconfig(state.synchro_bridge, fill=val, width=3 if val != "black" else 1)
-                        # === Если хотя бы одна сторона заскратована, и есть напряжение, то открыть двухпозиционный BC
+                reached = False
 
-
+            if reached and left_on:
+                for name in ("synchro_bus_id", "synchro_bus_tail", "synchro_input_left"):
+                    el = getattr(state, name, None)
+                    if el:
+                        state.canvas.itemconfig(el, fill=clr, width=3)

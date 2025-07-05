@@ -308,4 +308,3 @@ def draw_branch_frame(canvas, dx, dy):
 
 
     Arrow(canvas, base_x, 180 + dy, base_x, 180 + dy + 20 * 4, direction="down")
-    

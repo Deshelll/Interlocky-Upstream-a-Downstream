@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from ui.exclamation_icon import ExclamationIcon
+from ui.translations import t
 
 class CustomContextMenu:
     def __init__(self, master):
@@ -35,10 +36,10 @@ class CustomContextMenu:
                 size=16,
                 circle_color=color,
                 text_color=t_color,
-                tooltip_text=tooltip_text or (
-                    "Jste již v této poloze" if highlight else "Jste již v této poloze"
-                )
-            )
+                tooltip_text = (
+                    t("tooltip_already_in_position") if highlight
+                    else tooltip_text or t("tooltip_unavailable")
+                ))
             icon.pack(side="right", padx=5)
 
     def show(self, x_root, y_root):
