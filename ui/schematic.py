@@ -55,7 +55,7 @@ def draw_schematic(canvas):
     upper_mid = canvas.create_line(180 + offset_x, 130 + offset_y, 200 + offset_x, 155 + offset_y, width=2)
     cross1 = canvas.create_line(195 + offset_x - 0, 130 + offset_y - 5, 195 + offset_x + 9, 130 + offset_y + 3, width=2)
     cross2 = canvas.create_line(195 + offset_x - 0, 130 + offset_y + 3, 195 + offset_x + 9, 130 + offset_y - 5, width=2)
-
+    state.middle_upper_parts.append(upper_mid)
     canvas.tag_bind(upper_mid, "<Button-1>", lambda e: switches.on_middle_upper_click(e, canvas))
     hitbox3 = canvas.create_rectangle(170 + offset_x, 125 + offset_y, 210 + offset_x, 160 + offset_y, fill="lightgray", stipple="gray25", outline="")
     canvas.tag_bind(hitbox3, "<Button-1>", lambda e: switches.on_middle_upper_click(e, canvas))
