@@ -24,7 +24,11 @@ class SynchroUI:
         
         self.labels = [t("label_voltage"), t("label_frequency"), t("label_angle")]
         defaults = ["0", "50", "0"]
+        left_label = ctk.CTkLabel(self.left_column, text=t("tooltips_name_for_sync_1"), font=ctk.CTkFont(weight="bold"))
+        left_label.pack(pady=(0, 5))
 
+        right_label = ctk.CTkLabel(self.right_column, text=t("tooltips_name_for_sync_2"), font=ctk.CTkFont(weight="bold"))
+        right_label.pack(pady=(0, 5))
         for label, default in zip(self.labels, defaults):
             self._add_row(self.left_column, label, default)
             self._add_row(self.right_column, label, default)

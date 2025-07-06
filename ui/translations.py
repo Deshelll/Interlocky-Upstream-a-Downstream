@@ -95,6 +95,8 @@ translations = {
         "tooltip_voltage_block": "Na kabelech je napětí",
         "tooltip_all_on": "Všechny vypínače jsou zapnuté",
         "tooltip_already_in_position": "Jste již v této poloze",
+        "tooltips_name_for_sync_1": "Line(Kabely)",
+        "tooltips_name_for_sync_2": "Busbar(Přípojnice)",
     },
     "en": {
     "none": "No Blocking",
@@ -182,6 +184,8 @@ translations = {
     "tooltip_voltage_block": "Voltage present on cables",
     "tooltip_all_on": "All circuit breakeres are On",
     "event_none": "No blocking",
+    "tooltips_name_for_sync_1": "Line (Cables)",
+    "tooltips_name_for_sync_2": "Busbar",
 
     },
         "ru": {
@@ -269,7 +273,9 @@ translations = {
         "tooltip_short_block": "Отключите заземлитель вручную",
         "tooltip_mu_off": "Сначала включите вышестоящий выключатель",
         "tooltip_voltage_block": "На кабелях есть напряжение",
-        "tooltip_all_on": "Все выключатели включены"
+        "tooltip_all_on": "Все выключатели включены",
+        "tooltips_name_for_sync_1": "Шина 2(Кабели)",
+        "tooltips_name_for_sync_2": "Шина 1",
     },
 }
 current_language = "en"

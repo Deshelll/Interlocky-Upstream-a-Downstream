@@ -41,6 +41,10 @@ def register_three_switch(canvas, x, y, group_id=None):
 
     custom_switches.append(switch)
 
+def draw_cross(canvas, x, y, size=9, color="black", width=2):
+    offset = size // 2
+    canvas.create_line(x - offset, y - offset, x + offset, y + offset, fill=color, width=width)
+    canvas.create_line(x - offset, y + offset, x + offset, y - offset, fill=color, width=width)
 
 
 def register_two_switch(canvas, x, y, group_id=None):
@@ -54,7 +58,12 @@ def register_two_switch(canvas, x, y, group_id=None):
     }
 
     line = canvas.create_line(x - 20, y - 25, x, y, width=2)
+    cross1 = canvas.create_line(x - 5, y - 30, x + 4, y - 22, width=2)
+    cross2 = canvas.create_line(x - 5, y - 22, x + 4, y - 30, width=2)
+
+
     switch["id"] = line
+    switch["cross"] = (cross1, cross2)
 
     def on_click(event):
         show_two_switch_menu(event, switch)

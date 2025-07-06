@@ -2,6 +2,8 @@ from canvas_elements import Line, Circle, GroundSymbol, Arrow, TripleCircle
 from logic import state, switches
 from logic import custom_switches
 from logic import state
+from logic.custom_switches import draw_cross
+
 def draw_schematic(canvas):
     offset_x = 150
     offset_y = 50
@@ -51,7 +53,9 @@ def draw_schematic(canvas):
 
     state.middle_upper_parts = []
     upper_mid = canvas.create_line(180 + offset_x, 130 + offset_y, 200 + offset_x, 155 + offset_y, width=2)
-    state.middle_upper_parts.append(upper_mid)
+    cross1 = canvas.create_line(195 + offset_x - 0, 130 + offset_y - 5, 195 + offset_x + 9, 130 + offset_y + 3, width=2)
+    cross2 = canvas.create_line(195 + offset_x - 0, 130 + offset_y + 3, 195 + offset_x + 9, 130 + offset_y - 5, width=2)
+
     canvas.tag_bind(upper_mid, "<Button-1>", lambda e: switches.on_middle_upper_click(e, canvas))
     hitbox3 = canvas.create_rectangle(170 + offset_x, 125 + offset_y, 210 + offset_x, 160 + offset_y, fill="lightgray", stipple="gray25", outline="")
     canvas.tag_bind(hitbox3, "<Button-1>", lambda e: switches.on_middle_upper_click(e, canvas))
@@ -59,6 +63,8 @@ def draw_schematic(canvas):
 
     state.middle_lower_parts = []
     lower_mid = canvas.create_line(180 + offset_x, 286 + offset_y, 200 + offset_x, 261 + offset_y, width=2)
+    cross1 = canvas.create_line(195 + offset_x - 0, 286 + offset_y - 7 + 2, 195 + offset_x + 9, 286 + offset_y + 1 + 2, width=2)
+    cross2 = canvas.create_line(195 + offset_x - 0, 286 + offset_y + 1 + 2, 195 + offset_x + 9, 286 + offset_y - 7 + 2, width=2)
     state.middle_lower_parts.append(lower_mid)
     canvas.tag_bind(lower_mid, "<Button-1>", lambda e: switches.on_middle_lower_click(e, canvas))
     hitbox4 = canvas.create_rectangle(170 + offset_x, 255 + offset_y, 210 + offset_x, 290 + offset_y, fill="lightgray", stipple="gray25", outline="")

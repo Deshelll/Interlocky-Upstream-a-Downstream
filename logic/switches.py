@@ -5,6 +5,8 @@ from ui.context_menu import CustomContextMenu
 from canvas_elements import Line, GroundSymbol
 from logic import state, switches
 from ui.translations import t
+from logic.custom_switches import draw_cross
+
 
 
 def is_switch_transition_allowed(position):
@@ -148,13 +150,12 @@ def set_middle_upper_position(position, canvas):
         "off": (180 + offset_x, 130 + offset_y, 200 + offset_x, 155 + offset_y),
         "on": (200 + offset_x, 130 + offset_y, 200 + offset_x, 155 + offset_y)
     }
+    
     line = canvas.create_line(*coords[position], width=2)
     state.middle_upper_parts.append(line)
     canvas.tag_bind(line, "<Button-1>", lambda e: on_middle_upper_click(e, canvas))
     state.current_middle_upper_state = position
-
     if position == "off":
-
         state.current_middle_lower_state = "off"
         for el in state.middle_lower_parts:
             canvas.delete(el)

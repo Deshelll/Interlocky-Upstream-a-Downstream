@@ -10,6 +10,7 @@ from logic import custom_switches
 from canvas_elements import synchrocheck_ui
 from canvas_elements.synchrocheck_ui import SynchroUI
 from ui.translations import load_language_choice
+from logic.custom_switches import draw_cross
 import sys, os
 
 def resource_path(relative_path):
@@ -75,10 +76,10 @@ def run_ui(app):
         reset_all_ui_states(canvas)
 
         draw_schematic(canvas)
-
+        
         alarm_rect = canvas.create_rectangle(10, 420, 30, 440, fill="white", outline="black")
         alarm_text = canvas.create_text(35, 430, text="", anchor="w", font=("Arial", 10), fill="black")
-
+        
         if controls_frame:
             controls_frame.pack_forget()
         controls_frame_new = create_controls(app, canvas, alarm_text, alarm_rect, event_combobox_ref)
