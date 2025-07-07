@@ -27,6 +27,8 @@ def is_switch_transition_allowed(position):
         return ("voltage_short", t("tooltip_voltage_short"))
     if state.current_switch_state == "on" and position == "short":
         return ("on_short", t("tooltip_on_short"))
+    if state.current_switch_state == "short" and position == "on":
+        return ("short_on_block", t("tooltip_direct_transition_blocked"))
     return True
 
 def is_lower_switch_transition_allowed(position):
